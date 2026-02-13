@@ -14,22 +14,33 @@ from barcode.writer import ImageWriter
 # -------------------------------------------------
 # LABEL SIZE (EXACT)
 # -------------------------------------------------
-LABEL_W = 5 * cm        # width 5 cm
-LABEL_H = 3 * cm        # height 3 cm
+LABEL_W = 5 * cm
+LABEL_H = 3 * cm
 
 # -------------------------------------------------
-# CUTTING GAP (ADJUST AS NEEDED)
+# CUTTING GAP BETWEEN STICKERS
 # -------------------------------------------------
-H_GAP = 0.3 * cm        # horizontal gap between stickers
-V_GAP = 0.3 * cm        # vertical gap between stickers
+H_GAP = 0.3 * cm
+V_GAP = 0.3 * cm
+
+# -------------------------------------------------
+# PAGE MARGINS (LEFT / RIGHT / TOP / BOTTOM)
+# -------------------------------------------------
+LEFT_MARGIN   = 1.0 * cm
+RIGHT_MARGIN  = 1.0 * cm
+TOP_MARGIN    = 1.0 * cm
+BOTTOM_MARGIN = 1.0 * cm
 
 # -------------------------------------------------
 # PAGE
 # -------------------------------------------------
 PAGE_W, PAGE_H = A4
 
-COLS = int(PAGE_W // (LABEL_W + H_GAP))
-ROWS = int(PAGE_H // (LABEL_H + V_GAP))
+AVAILABLE_W = PAGE_W - LEFT_MARGIN - RIGHT_MARGIN
+AVAILABLE_H = PAGE_H - TOP_MARGIN - BOTTOM_MARGIN
+
+COLS = int(AVAILABLE_W // (LABEL_W + H_GAP))
+ROWS = int(AVAILABLE_H // (LABEL_H + V_GAP))
 
 # -------------------------------------------------
 # UI
@@ -70,8 +81,8 @@ if logo_file and excel_file and st.button("Generate PDF"):
 
     for _, r in df.iterrows():
 
-        x = col * (LABEL_W + H_GAP)
-        y = PAGE_H - ((row + 1) * (LABEL_H + V_GAP))
+        x = LEFT_MARGIN + col * (LABEL_W + H_GAP)
+        y = PAGE_H - TOP_MARGIN - ((row + 1) * (LABEL_H + V_GAP))
 
         # Optional border (cut guide)
         c.rect(x, y, LABEL_W, LABEL_H)
@@ -86,24 +97,12 @@ if logo_file and excel_file and st.button("Generate PDF"):
             mask="auto"
         )
 
-        # -------- TEXT --------
+        # -------- TEXT (Times Bold, 14pt) --------
         c.setFont("Times-Bold", 14)
 
-        c.drawCentredString(
-            x + LABEL_W / 2,
-            y + LABEL_H - 0.8 * cm,
-            str(r["code"])
-        )
-        c.drawCentredString(
-            x + LABEL_W / 2,
-            y + LABEL_H - 1.4 * cm,
-            str(r["name"])
-        )
-        c.drawCentredString(
-            x + LABEL_W / 2,
-            y + LABEL_H - 2.0 * cm,
-            str(r["district"])
-        )
+        c.drawCentredString(x + LABEL_W / 2, y + LABEL_H - 0.8 * cm, str(r["code"]))
+        c.drawCentredString(x + LABEL_W / 2, y + LABEL_H - 1.4 * cm, str(r["name"]))
+        c.drawCentredString(x + LABEL_W / 2, y + LABEL_H - 2.0 * cm, str(r["district"]))
 
         # -------- BARCODE --------
         CODE128 = barcode.get_barcode_class("code128")
@@ -144,6 +143,6 @@ if logo_file and excel_file and st.button("Generate PDF"):
     st.download_button(
         label="⬇️ Download Sticker PDF",
         data=pdf_buffer,
-        file_name="stickers_5x3cm_with_gap.pdf",
+        file_name="stickers_5x3cm_with_margins.pdf",
         mime="application/pdf"
     )
